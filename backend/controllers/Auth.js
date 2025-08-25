@@ -220,3 +220,15 @@ exports.login = async (req, res) => {
         });
     }
 };
+
+// change Password
+exports.changePassword = async (req, res) => {
+    try {
+        // get data from req body
+        // get old pass, newPassword, confirmNewPassword
+        // validation
+        // update password in db
+        // send mail - Password Updated
+        // return response
+    } catch (err) {}
+};
