@@ -4,6 +4,7 @@ const otpGenerator = require("otp-generator");
 const bcrypt = require("bcrypt");
 const Profile = require("../models/Profile.js");
 const jwt = require("jsonwebtoken");
+const mailSender = require("../utils/mailSender.js");
 require("dotenv").config();
 
 // send OTP
@@ -226,9 +227,62 @@ exports.changePassword = async (req, res) => {
     try {
         // get data from req body
         // get old pass, newPassword, confirmNewPassword
+        const { oldPassword, newPassword, confirmPassword } = req.body;
         // validation
+        if (!oldPassword || !newPassword || !confirmPassword) {
+            return res.status(400).json({
+                success: false,
+                message: "All fields are required",
+            });
+        }
+
+        const userDetails = await User.findById(req.user.id);
+        if (newPassword !== confirmPassword) {
+            return res.status(401).json({
+                success: false,
+                message: "Password and ConfirmPassword is not matching",
+            });
+        }
+
+        const passwordMatch = await bcrypt.compare(
+            oldPassword,
+            userDetails.password
+        );
+
+        if (!passwordMatch) {
+            return res.status(401).json({
+                success: false,
+                message: "Password is not matching with user password",
+            });
+        }
+
         // update password in db
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const updatedDetails = await User.findByIdAndUpdate(
+            req.user.id,
+            {
+                password: hashedPassword,
+            },
+            { new: true }
+        );
+
         // send mail - Password Updated
+        await mailSender(
+            updatedDetails.email,
+            "Password Changed",
+            "Password has been changed successfully. If this wasn't you contact he support immediately"
+        );
+
         // return response
-    } catch (err) {}
+        return res.status(200).json({
+            success: true,
+            message: "Password has been changed successfully",
+        });
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong while changing password",
+            error: err.message,
+        });
+    }
 };
