@@ -1,5 +1,5 @@
 const Course = require("../models/Course.js");
-const Tag = require("../models/Tag.js");
+const Category = require("../models/Category.js");
 const User = require("../models/User.js");
 const { uploadImageToCloudinary } = require("../utils/imageUploader.js");
 
@@ -7,8 +7,14 @@ const { uploadImageToCloudinary } = require("../utils/imageUploader.js");
 exports.createCourse = async (req, res) => {
     try {
         // fetch data
-        const { courseName, courseDescription, whatYouWillLearn, price, tag } =
-            req.body;
+        const {
+            courseName,
+            courseDescription,
+            whatYouWillLearn,
+            price,
+            category,
+            tag,
+        } = req.body;
 
         // get thumbnail
         const thumbnail = req.files.thumbnailImage;
@@ -19,8 +25,9 @@ exports.createCourse = async (req, res) => {
             !courseDescription ||
             !whatYouWillLearn ||
             !price ||
-            !tag ||
-            !thumbnail
+            !category ||
+            !thumbnail ||
+            !tag
         ) {
             return res.status(400).json({
                 success: false,
@@ -40,13 +47,13 @@ exports.createCourse = async (req, res) => {
             });
         }
 
-        // check given tag is valid or not
-        const tagDetails = await Tag.findById(tag);
+        // check given category is valid or not
+        const categoryDetails = await Category.findById(category);
 
-        if (!tagDetails) {
+        if (!categoryDetails) {
             return res.status(404).json({
                 success: false,
-                message: "Tag details not found",
+                message: "Category details not found",
             });
         }
 
@@ -63,8 +70,9 @@ exports.createCourse = async (req, res) => {
             instructor: instructorDetails._id,
             whatYouWillLearn: whatYouWillLearn,
             price: price,
-            tag: tagDetails._id,
+            category: categoryDetails._id,
             thumbnail: thumbnailImage.secure_url,
+            tag: tag,
         });
 
         // instructor needs to be updated
@@ -78,7 +86,9 @@ exports.createCourse = async (req, res) => {
             { new: true }
         );
 
-        // update TAG SCHEMA
+        // update CATEGORY SCHEMA
+        categoryDetails.course.push(newCourse._id);
+        await categoryDetails.save();
 
         // return response
         return res.status(200).json({

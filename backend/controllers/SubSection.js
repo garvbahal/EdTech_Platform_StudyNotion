@@ -44,9 +44,11 @@ exports.createSubSection = async (req, res) => {
             {
                 new: true,
             }
-        );
-
-        // HW : LOG UPDATED SECTION HERE AFTER ADDING POPULATE QUERY
+        )
+            .populate({
+                path: "subSection",
+            })
+            .exec();
 
         // return the response
         return res.status(200).json({
@@ -64,5 +66,64 @@ exports.createSubSection = async (req, res) => {
 };
 
 // HW : WRITE UPDATE SUBSECTION
+exports.updateSubSection = async (req, res) => {
+    try {
+        // fetch title, description which has to be updated
+        // fetch subsectionId
+        const { title, description, subSectionId } = req.body;
+
+        // validate the data
+        if (!title || !description || !subSectionId) {
+            return res.status(404).json({
+                success: false,
+                message: "All fields are mandatory",
+            });
+        }
+
+        // update the data in db
+        const updatedSubSectionDetails = await SubSection.findByIdAndUpdate(
+            subSectionId,
+            {
+                title: title,
+                description: description,
+            },
+            { new: true }
+        );
+
+        // return response
+        return res.status(200).json({
+            success: true,
+            message: "Sub-Section has been updated successfully",
+            updatedSubSectionDetails,
+        });
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong while updating sub-section",
+            error: err.message,
+        });
+    }
+};
 
 // HW : WRITE DELETE SUBSECTION
+exports.deleteSubSection = async (req, res) => {
+    try {
+        // fetch subsectionId
+        const { subSectionId } = req.params;
+
+        // delete from db
+        await SubSection.findByIdAndDelete(subSectionId);
+
+        // return response
+        return res.status(200).json({
+            success: true,
+            message: "Sub-Section has been deleted successfully",
+        });
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong while deleting sub-section",
+            error: err.message,
+        });
+    }
+};
