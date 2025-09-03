@@ -49,3 +49,64 @@ exports.updateProfile = async (req, res) => {
         });
     }
 };
+
+// delete the account
+
+exports.deleteAccount = async (req, res) => {
+    try {
+        // fetch the id
+        const userId = req.user.id;
+
+        // do validation
+        const userDetails = await User.findById(userId);
+        if (!userDetails) {
+            return res.status(404).json({
+                success: false,
+                message: "User Id is not correct",
+            });
+        }
+
+        // delete the profile first
+        const profileId = userDetails.additionalDetails;
+        await Profile.findByIdAndDelete(profileId);
+
+        // HW: UNEROLLED USER FROM ALL ENROLLED COURSES
+
+        // delete the user
+        await User.findByIdAndDelete(userId);
+
+        // return response
+        return res.status(200).json({
+            success: true,
+            message: "User has been deleted successfully",
+        });
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong while deleting the user account",
+            error: err.message,
+        });
+    }
+};
+
+exports.getAllUserDetails = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const userDetails = await User.findById(userId)
+            .populate("additionalDetails")
+            .exec();
+
+        return res.status(200).json({
+            success: true,
+            message: "User data has been fetched successfully",
+            user: userDetails,
+        });
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong while fetching user-details",
+            error: err.message,
+        });
+    }
+};
