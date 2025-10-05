@@ -44,6 +44,7 @@ exports.createRating = async (req, res) => {
             course: courseId,
         });
 
+        // HW : check if there is mistake or not
         // add rating to course model
         const updatedCourseDetails = await Course.findByIdAndUpdate(
             courseId,
